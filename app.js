@@ -1,5 +1,5 @@
 ;
-(function() {
+document.onreadystatechange = (function() {
 
     var screen = {
         x: 750,
@@ -318,4 +318,4 @@
     //     );
     // }
 
-})();
+});
