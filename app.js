@@ -2,13 +2,13 @@
 (function() {
 
     var screen = {
-        x: 600,
-        y: 400
+        x: 750,
+        y: 450
     };
 
     var game = {
-        columns: 12,
-        rows: 8,
+        columns: 15,
+        rows: 9,
         board: []
     };
 
@@ -41,8 +41,27 @@
     addBody(bingo);
 
 
-    addBody(new Rock(1, 2));
-    addBody(new Rock(1, 3));
+    addBody(new Rock(3, 0));
+    addBody(new Rock(4, 0));
+    addBody(new Rock(9, 0));
+    addBody(new Rock(14, 0));
+    addBody(new Rock(9, 1));
+    addBody(new Rock(14, 1));
+    addBody(new Rock(0, 2));
+    addBody(new Rock(4, 3));
+    addBody(new Rock(5, 3));
+    addBody(new Rock(8, 3));
+    addBody(new Rock(8, 4));
+    addBody(new Rock(12, 4));
+    addBody(new Rock(13, 4));
+    addBody(new Rock(2, 5));
+    addBody(new Rock(3, 5));
+    addBody(new Rock(6, 6));
+    addBody(new Rock(10, 6));
+    addBody(new Rock(11, 6));
+    addBody(new Rock(11, 6));
+    addBody(new Rock(1, 7));
+    addBody(new Rock(6, 7));
 
     function addBody(body) {
         game.board[body.position.x][body.position.y] = body;
