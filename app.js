@@ -36,26 +36,23 @@ document.onreadystatechange = (function() {
     var bingo = new Bingo(0, 0)
     addBody(bingo);
 
+    var rockList = {
+        1: [
+            [3, 0], [4, 0], [9, 0], [14, 0], [14, 1], [0, 2], [4, 3], [5, 3],
+            [8, 3], [8, 4], [13, 4], [14, 4], [2, 5], [11, 5], [2, 6], [10, 6],
+            [11, 6], [6, 7]
+        ],
+        2: [
+            [3, 0], [4, 0], [9, 0], [14, 0], [9, 1], [14, 1], [0, 2], [4, 3],
+            [5, 3], [8, 3], [5, 4], [8, 4], [12, 4], [13, 4], [2, 5], [3, 5],
+            [6, 6], [10, 6], [11, 6], [1, 7], [6, 7]
+        ]
+    };
 
-    addBody(new Rock(3, 0));
-    addBody(new Rock(4, 0));
-    addBody(new Rock(9, 0));
-    addBody(new Rock(14, 0));
-    addBody(new Rock(14, 1));
-    addBody(new Rock(0, 2));
-    addBody(new Rock(4, 3));
-    addBody(new Rock(5, 3));
-    addBody(new Rock(8, 3));
-    addBody(new Rock(8, 4));
-    addBody(new Rock(13, 4));
-    addBody(new Rock(14, 4));
-    addBody(new Rock(2, 5));
-    addBody(new Rock(11, 5));
-    addBody(new Rock(2, 6));
-    addBody(new Rock(10, 6));
-    addBody(new Rock(11, 6));
-    addBody(new Rock(11, 6));
-    addBody(new Rock(6, 7));
+    for (var i = 0; i < rockList[2].length; i++) {
+        var rock = rockList[2][i];
+        addBody(new Rock(rock[0], rock[1]));
+    }
 
     function resetTail() {
         for (var x = 0; x < game.columns; x++) {
