@@ -20,20 +20,16 @@ document.onreadystatechange = (function() {
     var LEFT = 37;
     var ESC = 27;
 
+    var canvas = document.getElementById('screen');
+    var ctx = canvas.getContext('2d');
+
+    canvas.height = screen.y;
+    canvas.width = screen.x;
+
     for (var x = 0; x < game.columns; x++) {
         game.board[x] = [];
         for (var y = 0; y < game.rows; y++) {
             game.board[x][y] = null;
-        }
-    }
-
-    function resetTail() {
-        for (var x = 0; x < game.columns; x++) {
-            for (var y = 0; y < game.rows; y++) {
-                if (game.board[x][y] && game.board[x][y].className == 'Tail') {
-                    game.board[x][y] = null;
-                }
-            }
         }
     }
 
@@ -45,7 +41,6 @@ document.onreadystatechange = (function() {
     addBody(new Rock(4, 0));
     addBody(new Rock(9, 0));
     addBody(new Rock(14, 0));
-    // addBody(new Rock(9, 1));
     addBody(new Rock(14, 1));
     addBody(new Rock(0, 2));
     addBody(new Rock(4, 3));
@@ -57,12 +52,20 @@ document.onreadystatechange = (function() {
     addBody(new Rock(2, 5));
     addBody(new Rock(11, 5));
     addBody(new Rock(2, 6));
-    // addBody(new Rock(6, 6));
     addBody(new Rock(10, 6));
     addBody(new Rock(11, 6));
     addBody(new Rock(11, 6));
-    // addBody(new Rock(1, 7));
     addBody(new Rock(6, 7));
+
+    function resetTail() {
+        for (var x = 0; x < game.columns; x++) {
+            for (var y = 0; y < game.rows; y++) {
+                if (game.board[x][y] && game.board[x][y].className == 'Tail') {
+                    game.board[x][y] = null;
+                }
+            }
+        }
+    }
 
     function addBody(body) {
         game.board[body.position.x][body.position.y] = body;
@@ -73,39 +76,24 @@ document.onreadystatechange = (function() {
             return;
         }
 
+        var currentPosition = { x: bingo.position.x, y: bingo.position.y };
+        var hasMoved = false;
+
         if (e.keyCode == UP) {
-            var currentPosition = { x: bingo.position.x, y: bingo.position.y };
-            if (bingo.move('UP', 1)) {
-                addBody(new Tail(currentPosition.x, currentPosition.y));
-            } else {
-                bingo.resetState();
-                resetTail();
-            }
+            hasMoved = bingo.move('UP', 1);
         } else if (e.keyCode == RIGHT) {
-            var currentPosition = { x: bingo.position.x, y: bingo.position.y };
-            if (bingo.move('RIGHT', 1)) {
-                addBody(new Tail(currentPosition.x, currentPosition.y));
-            } else {
-                bingo.resetState();
-                resetTail();
-            }
+            hasMoved = bingo.move('RIGHT', 1)
         } else if (e.keyCode == DOWN) {
-            var currentPosition = { x: bingo.position.x, y: bingo.position.y };
-            if (bingo.move('DOWN', 1)) {
-                addBody(new Tail(currentPosition.x, currentPosition.y));
-            } else {
-                bingo.resetState();
-                resetTail();
-            }
+            hasMoved = bingo.move('DOWN', 1)
         } else if (e.keyCode == LEFT) {
-            var currentPosition = { x: bingo.position.x, y: bingo.position.y };
-            if (bingo.move('LEFT', 1)) {
-                addBody(new Tail(currentPosition.x, currentPosition.y));
-            } else {
-                bingo.resetState();
-                resetTail();
-            }
-        } else if (e.keyCode == ESC) {
+            hasMoved = bingo.move('LEFT', 1)
+        }
+
+        if (hasMoved) {
+            addBody(new Tail(currentPosition.x, currentPosition.y));
+        }
+
+        if (! hasMoved || e.keyCode == ESC) {
             bingo.resetState();
             resetTail();
         }
@@ -140,36 +128,8 @@ document.onreadystatechange = (function() {
 
     });
 
-    var map = function(value, in_min, in_max, out_min, out_max) {
-        return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-    };
-
-    var canvas = document.getElementById('screen');
-    var ctx = canvas.getContext('2d');
-
-    canvas.height = screen.y;
-    canvas.width = screen.x;
-
-    // console.log(canvas.toDataURL('image/png'));
-
     function draw() {
         ctx.clearRect(0, 0, screen.x, screen.y);
-
-        for (var i = 0; i <= game.columns; i++) {
-            ctx.beginPath();
-            ctx.moveTo(map(i, 0, game.columns, 0, screen.x), 0);
-            ctx.lineWidth = 1;
-            ctx.lineTo(map(i, 0, game.columns, 0, screen.x), screen.y);
-            ctx.stroke();
-        }
-
-        for (var i = 0; i <= game.rows; i++) {
-            ctx.beginPath();
-            ctx.moveTo(0, map(i, 0, game.rows, 0, screen.y));
-            ctx.lineWidth = 1;
-            ctx.lineTo(screen.x, map(i, 0, game.rows, 0, screen.y));
-            ctx.stroke();
-        }
 
         for (var x = 0; x < game.columns; x++) {
             for (var y = 0; y < game.rows; y++) {
