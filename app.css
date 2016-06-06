@@ -9,3 +9,7 @@ body {
 #screen {
     display: inline-block;
 }
+
+p {
+    font-size: 16px;
+}

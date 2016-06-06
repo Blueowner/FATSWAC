@@ -12,7 +12,7 @@ document.onreadystatechange = (function() {
         board: []
     };
 
-    var bodies = [];
+    var isWon = false;
 
     var UP = 38;
     var RIGHT = 39;
@@ -45,22 +45,23 @@ document.onreadystatechange = (function() {
     addBody(new Rock(4, 0));
     addBody(new Rock(9, 0));
     addBody(new Rock(14, 0));
-    addBody(new Rock(9, 1));
+    // addBody(new Rock(9, 1));
     addBody(new Rock(14, 1));
     addBody(new Rock(0, 2));
     addBody(new Rock(4, 3));
     addBody(new Rock(5, 3));
     addBody(new Rock(8, 3));
     addBody(new Rock(8, 4));
-    addBody(new Rock(12, 4));
     addBody(new Rock(13, 4));
+    addBody(new Rock(14, 4));
     addBody(new Rock(2, 5));
-    addBody(new Rock(3, 5));
-    addBody(new Rock(6, 6));
+    addBody(new Rock(11, 5));
+    addBody(new Rock(2, 6));
+    // addBody(new Rock(6, 6));
     addBody(new Rock(10, 6));
     addBody(new Rock(11, 6));
     addBody(new Rock(11, 6));
-    addBody(new Rock(1, 7));
+    // addBody(new Rock(1, 7));
     addBody(new Rock(6, 7));
 
     function addBody(body) {
@@ -68,6 +69,10 @@ document.onreadystatechange = (function() {
     };
 
     document.addEventListener('keyup', function(e) {
+        if (isWon) {
+            return;
+        }
+
         if (e.keyCode == UP) {
             var currentPosition = { x: bingo.position.x, y: bingo.position.y };
             if (bingo.move('UP', 1)) {
@@ -109,7 +114,7 @@ document.onreadystatechange = (function() {
 
         for (var x = 0; x < game.columns; x++) {
             for (var y = 0; y < game.rows; y++) {
-                if (game.board[x][y] === null ) {
+                if (game.board[x][y] === null) {
                     isWon = false;
                     break;
                 }
@@ -126,11 +131,11 @@ document.onreadystatechange = (function() {
                 80
             );
 
-            alert();
+            var $isWonInfo = document.getElementById('isWonInfo');
+            $isWonInfo.style.display = 'block';
 
-            bingo.resetState();
-            resetTail();
-            draw();
+            var $downloadAnchor = document.getElementById('downloadAnchor');
+            $downloadAnchor.href = canvas.toDataURL('image/png');
         }
 
     });
@@ -144,6 +149,8 @@ document.onreadystatechange = (function() {
 
     canvas.height = screen.y;
     canvas.width = screen.x;
+
+    // console.log(canvas.toDataURL('image/png'));
 
     function draw() {
         ctx.clearRect(0, 0, screen.x, screen.y);
