@@ -73,6 +73,14 @@ document.onreadystatechange = (function() {
             return;
         }
 
+        console.log(
+            [UP, RIGHT, DOWN, LEFT, ESC].indexOf(e.keyCode)
+        );
+
+        if ([UP, RIGHT, DOWN, LEFT, ESC].indexOf(e.keyCode) === -1) {
+            return;
+        }
+
         var currentPosition = { x: bingo.position.x, y: bingo.position.y };
         var hasMoved = false;
 
@@ -90,7 +98,7 @@ document.onreadystatechange = (function() {
             addBody(new Tail(currentPosition.x, currentPosition.y));
         }
 
-        if (! hasMoved || e.keyCode == ESC) {
+        if ( ! hasMoved || e.keyCode == ESC) {
             bingo.resetState();
             resetTail();
         }
