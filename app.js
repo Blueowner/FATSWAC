@@ -1,293 +1,283 @@
 ;
-document.onreadystatechange = (function() {
 
+function Platform() {
     var screen = {
         x: 750,
         y: 450
     };
 
-    var game = {
+    var pref = {
         columns: 15,
-        rows: 9,
-        board: []
+        rows: 9
     };
 
-    var isWon = false;
+    return {
+        screen: screen,
+        pref: pref
+    }
+}
 
-    var UP = 38;
-    var RIGHT = 39;
-    var DOWN = 40;
-    var LEFT = 37;
-    var ESC = 27;
+var platform = new Platform();
 
+function Keyboard() {
+    var keydown = {};
+
+    var controller = {
+        UP: 38,
+        RIGHT: 39,
+        DOWN: 40,
+        LEFT: 37,
+        ESC: 27
+    }
+
+    function doKeydown(e) {
+        keydown[e.keyCode] = true;
+    }
+
+    function doKeyup(e) {
+        keydown[e.keyCode] = false;
+    }
+
+    function isKeyDown(code) {
+        return keydown[code] || false;
+    }
+
+    return {
+        keydown: keydown,
+        controller: controller,
+        doKeyup: doKeyup,
+        doKeydown: doKeydown,
+        isKeyDown: isKeyDown
+    }
+}
+
+var keyboard = new Keyboard();
+
+function Game() {
     var canvas = document.getElementById('screen');
     var ctx = canvas.getContext('2d');
 
-    canvas.height = screen.y;
-    canvas.width = screen.x;
+    var state = 'GAME_INITIALIZED';
 
-    for (var x = 0; x < game.columns; x++) {
-        game.board[x] = [];
-        for (var y = 0; y < game.rows; y++) {
-            game.board[x][y] = null;
-        }
-    }
+    var board = [];
 
-    var bingo = new Bingo(0, 0)
-    addBody(bingo);
+    var rocks = [
+        [3, 0], [4, 0], [9, 0], [14, 0], [9, 1], [14, 1], [0, 2], [4, 3],
+        [5, 3], [8, 3], [5, 4], [8, 4], [12, 4], [13, 4], [2, 5], [3, 5],
+        [6, 6], [10, 6], [11, 6], [1, 7], [6, 7]
+    ];
 
-    var rockList = {
-        1: [
-            [3, 0], [4, 0], [9, 0], [14, 0], [14, 1], [0, 2], [4, 3], [5, 3],
-            [8, 3], [8, 4], [13, 4], [14, 4], [2, 5], [11, 5], [2, 6], [10, 6],
-            [11, 6], [6, 7]
-        ],
-        2: [
-            [3, 0], [4, 0], [9, 0], [14, 0], [9, 1], [14, 1], [0, 2], [4, 3],
-            [5, 3], [8, 3], [5, 4], [8, 4], [12, 4], [13, 4], [2, 5], [3, 5],
-            [6, 6], [10, 6], [11, 6], [1, 7], [6, 7]
-        ]
-    };
+    var bingo = new Bingo(0, 0);
 
-    for (var i = 0; i < rockList[2].length; i++) {
-        var rock = rockList[2][i];
-        addBody(new Rock(rock[0], rock[1]));
-    }
+    function init() {
+        canvas.height = platform.screen.y;
+        canvas.width = platform.screen.x;
 
-    function resetTail() {
-        for (var x = 0; x < game.columns; x++) {
-            for (var y = 0; y < game.rows; y++) {
-                if (game.board[x][y] && game.board[x][y].className == 'Tail') {
-                    game.board[x][y] = null;
-                }
-            }
-        }
-    }
-
-    function addBody(body) {
-        game.board[body.position.x][body.position.y] = body;
-    };
-
-    document.addEventListener('keyup', function(e) {
-        if (isWon) {
-            return;
-        }
-
-        console.log(
-            [UP, RIGHT, DOWN, LEFT, ESC].indexOf(e.keyCode)
-        );
-
-        if ([UP, RIGHT, DOWN, LEFT, ESC].indexOf(e.keyCode) === -1) {
-            return;
-        }
-
-        var currentPosition = { x: bingo.position.x, y: bingo.position.y };
-        var hasMoved = false;
-
-        if (e.keyCode == UP) {
-            hasMoved = bingo.move('UP', 1);
-        } else if (e.keyCode == RIGHT) {
-            hasMoved = bingo.move('RIGHT', 1)
-        } else if (e.keyCode == DOWN) {
-            hasMoved = bingo.move('DOWN', 1)
-        } else if (e.keyCode == LEFT) {
-            hasMoved = bingo.move('LEFT', 1)
-        }
-
-        if (hasMoved) {
-            addBody(new Tail(currentPosition.x, currentPosition.y));
-        }
-
-        if ( ! hasMoved || e.keyCode == ESC) {
-            bingo.resetState();
-            resetTail();
-        }
-
-        isWon = true;
-
-        for (var x = 0; x < game.columns; x++) {
-            for (var y = 0; y < game.rows; y++) {
-                if (game.board[x][y] === null) {
-                    isWon = false;
-                    break;
-                }
+        for (var x = 0; x < platform.pref.columns; x++) {
+            for (var y = 0; y < platform.pref.rows; y++) {
+                addBody(new Body('Ground', x, y, 'ground'));
             }
         }
 
-        draw();
-
-        if (isWon) {
-            var youWon = document.getElementById('youWon');
-            ctx.drawImage(
-                youWon,
-                screen.x / 2 - (youWon.width / 2),
-                80
-            );
-
-            var $isWonInfo = document.getElementById('isWonInfo');
-            $isWonInfo.style.display = 'block';
-
-            var $downloadAnchor = document.getElementById('downloadAnchor');
-            $downloadAnchor.href = canvas.toDataURL('image/png');
+        for (var i = 0; i < rocks.length; i++) {
+            var x = rocks[i][0];
+            var y = rocks[i][1];
+            addBody(new Rock(x, y));
         }
 
-    });
+        addBody(this.bingo);
+
+        state = 'GAME_PLAYING';
+    }
 
     function draw() {
-        ctx.clearRect(0, 0, screen.x, screen.y);
+        if (state == 'GAME_PLAYING') {
+            ctx.clearRect(0, 0, platform.screen.x, platform.screen.y);
 
-        for (var x = 0; x < game.columns; x++) {
-            for (var y = 0; y < game.rows; y++) {
-                var img = document.getElementById('ground');
-
-                ctx.beginPath();
-                ctx.drawImage(
-                    img,
-                    x * screen.x / game.columns,
-                    y * screen.y / game.rows,
-                    screen.x / game.columns,
-                    screen.y / game.rows
-                );
-            }
-        }
-
-        for (var x = 0; x < game.columns; x++) {
-            for (var y = 0; y < game.rows; y++) {
-                if (game.board[x][y] === null) {
-                    continue;
-                }
-
-                var body = game.board[x][y];
+            for (var i = 0; i < board.length; i++) {
+                var body = board[i];
                 var img = document.getElementById(body.image);
 
                 ctx.beginPath();
                 ctx.drawImage(
                     img,
-                    body.position.x * screen.x / game.columns,
-                    body.position.y * screen.y / game.rows,
-                    screen.x / game.columns,
-                    screen.y / game.rows
+                    body.getPosition().x * platform.screen.x / platform.pref.columns,
+                    body.getPosition().y * platform.screen.y / platform.pref.rows,
+                    platform.screen.x / platform.pref.columns,
+                    platform.screen.y / platform.pref.rows
                 );
             }
+        } else if (state == 'GAME_COMPLETED') {
+            var img = document.getElementById('youWon');
+            ctx.drawImage(
+                img,
+                platform.screen.x / 2 - (img.width / 2),
+                80
+            );
+            state = 'MENU_RESTART';
+        } else if (state == 'BINGO_CRASHED') {
+        } else if (state == 'MENU_RESTART') {
         }
-
     }
 
-    function Bingo(x, y, color) {
-        this.className = 'Bingo';
-        // Body
-        this.size = { x: screen.x / game.columns, y: screen.y / game.rows };
-        this.position = { x: x, y: y };
+    function update() {
+        for (var i = 0; i < board.length; i++) {
+            board[i].update();
+        }
 
-        this.color = 'rgb(191,224,255)';
-        this.image = 'bingo';
-        this.tail = [];
-
-        this.move = function(direction, offset) {
-
-            if (direction == 'UP') {
-                if (this.position.y - offset < 0 ) {
-                    return false;
-                }
-
-                var isCrashed = game.board[this.position.x][this.position.y - offset] !== null;
-
-                if (isCrashed) {
-                    return false;
-                }
-
-                this.position.y -= offset;
-            } else if (direction == 'RIGHT') {
-                if (this.position.x + offset > game.columns - 1) {
-                    return false;
-                }
-
-                var isCrashed = game.board[this.position.x + offset][this.position.y] !== null;
-
-                if (isCrashed) {
-                    return false;
-                }
-
-                this.position.x += offset;
-            } else if (direction == 'DOWN') {
-                if (this.position.y + offset > game.rows - 1) {
-                    return false;
-                }
-
-                var isCrashed = game.board[this.position.x][this.position.y + offset] !== null;
-
-                if (isCrashed) {
-                    return false;
-                }
-
-                this.position.y += offset;
-            } else if (direction == 'LEFT') {
-                if (this.position.x - offset < 0) {
-                    return false;
-                }
-
-                var isCrashed = game.board[this.position.x - offset][this.position.y] !== null;
-
-                if (isCrashed) {
-                    return false;
-                }
-
-                this.position.x -= offset;
+        for (var i = 0; i < board.length; i++) {
+            if (bingo.collide(board[i])) {
+                bingo.reset();
             }
+        }
+    }
 
-            addBody(this);
+    function addBody(body) {
+        board.push(body);
+    }
 
-            return true;
+    return {
+        ctx: ctx,
+        board: board,
+        bingo: bingo,
+        init: init,
+        draw: draw,
+        update: update
+    }
+
+}
+
+function Body(name, x, y, image) {
+    var position = { x: x, y: y };
+
+    var size = {
+        x: platform.screen.x / platform.pref.columns,
+        y: platform.screen.y / platform.pref.rows
+    };
+
+    var collider = false;
+
+    function update() {}
+
+    function setPosition(x, y) {
+        position = { x: x, y: y };
+    }
+
+    function getPosition() {
+        return position;
+    }
+
+    function collide(body) {
+        if (this === body) {
+            return false;
         }
 
-        this.resetState = function() {
-            game.board[this.position.x][this.position.y] = null;
-
-            this.position = { x: x, y: y };
-            this.tail = [];
-
-            addBody(this);
+        if ( ! body.collider) {
+            return false;
         }
 
+        return getPosition().x === body.getPosition().x &&
+               getPosition().y === body.getPosition().y;
     }
 
-    function Rock(x, y) {
-        this.className = 'Rock';
+    return {
+        size: size,
+        image: image,
+        collider: collider,
+        update: update,
+        setPosition: setPosition,
+        getPosition: getPosition,
+        collide: collide
+    }
+}
 
-        // Body
-        this.position = { x: x, y: y };
-        this.size = { x: screen.x / game.columns, y: screen.y / game.rows };
+function Rock(x, y) {
+    var parent = new Body('Rock', x, y, 'rock');
 
-        this.color = 'rgb(109,76,65)';
-        this.image = 'rock';
+    parent.collider = true;
+
+    return parent;
+}
+
+function Bingo(x, y) {
+
+    var parent = new Body('Bingo', x, y, 'bingo');
+
+    parent.collider = true;
+    parent.update = update;
+    parent.reset = reset;
+
+    var isOnCooldown = false;
+    var actionStartTimestamp = null;
+
+    function update() {
+        if (isOnCooldown && +new Date() - actionStartTimestamp > 120) {
+            isOnCooldown = false;
+            actionStartTimestamp = null;
+        }
+
+        if (isOnCooldown) { return; }
+
+        if (keyboard.isKeyDown(keyboard.controller.UP)) {
+            if (parent.getPosition().y - 1 < 0) {
+                return;
+            }
+            parent.setPosition(parent.getPosition().x, parent.getPosition().y - 1);
+            isOnCooldown = true;
+            actionStartTimestamp = +new Date();
+        }
+
+        if (keyboard.isKeyDown(keyboard.controller.RIGHT)) {
+            if (parent.getPosition().x + 1 >= platform.pref.columns) {
+                return;
+            }
+            parent.setPosition(parent.getPosition().x + 1, parent.getPosition().y);
+            isOnCooldown = true;
+            actionStartTimestamp = +new Date();
+        }
+
+        if (keyboard.isKeyDown(keyboard.controller.DOWN)) {
+            if (parent.getPosition().y + 1 >= platform.pref.rows) {
+                return;
+            }
+            parent.setPosition(parent.getPosition().x, parent.getPosition().y + 1);
+            isOnCooldown = true;
+            actionStartTimestamp = +new Date();
+        }
+
+        if (keyboard.isKeyDown(keyboard.controller.LEFT)) {
+            if (parent.getPosition().x - 1 < 0) {
+                return;
+            }
+            parent.setPosition(parent.getPosition().x - 1, parent.getPosition().y);
+            isOnCooldown = true;
+            actionStartTimestamp = +new Date();
+        }
     }
 
-    function Tail(x, y) {
-        this.className = 'Tail';
-
-        // Body
-        this.position = { x: x, y: y };
-        this.size = { x: screen.x / game.columns, y: screen.y / game.rows };
-
-        this.color = 'rgb(191,224,255)';
-        this.image = 'ground-2';
+    function reset() {
+        parent.setPosition(0, 0);
     }
 
-    draw();
+    return parent;
+}
 
-    function Body(x, y, width, height) {
-        this.size = { x: width, y: height };
-        this.position = { x: x, y: y };
+
+
+
+(function() {
+    var game = new Game();
+    game.init();
+
+    document.addEventListener('keydown', keyboard.doKeydown, false);
+    document.addEventListener('keyup', keyboard.doKeyup, false);
+
+    function tick() {
+        requestAnimationFrame(tick);
+
+        game.update();
+        game.draw();
     }
 
-    // function isColliding(b1, b2) {
-    //     return ! (
-    //         b1 === b2 ||
-    //         b1.position.y > b2.position.y + b2.size.y ||
-    //         b1.position.x > b2.position.x + b2.size.x ||
-    //         b1.position.y + b1.size.y < b2.position.y ||
-    //         b1.position.x + b1.size.x < b2.position.x
-    //     );
-    // }
-
-});
+    requestAnimationFrame(tick);
+})();
