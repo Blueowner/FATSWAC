@@ -31,7 +31,9 @@ function Keyboard() {
     }
 
     function doKeydown(e) {
-        keydown[e.keyCode] = true;
+        if ( ! keydown[e.keyCode]) {
+            keydown[e.keyCode] = +new Date();
+        }
     }
 
     function doKeyup(e) {
@@ -90,24 +92,30 @@ function Game() {
         state = 'GAME_PLAYING';
     }
 
+    function drawMap() {
+        ctx.clearRect(0, 0, platform.screen.x, platform.screen.y);
+
+        for (var i = 0; i < board.length; i++) {
+            var body = board[i];
+            var img = document.getElementById(body.image);
+
+            ctx.beginPath();
+            ctx.drawImage(
+                img,
+                body.getPosition().x * platform.screen.x / platform.pref.columns,
+                body.getPosition().y * platform.screen.y / platform.pref.rows,
+                platform.screen.x / platform.pref.columns,
+                platform.screen.y / platform.pref.rows
+            );
+        }
+    }
+
     function draw() {
         if (state == 'GAME_PLAYING') {
-            ctx.clearRect(0, 0, platform.screen.x, platform.screen.y);
-
-            for (var i = 0; i < board.length; i++) {
-                var body = board[i];
-                var img = document.getElementById(body.image);
-
-                ctx.beginPath();
-                ctx.drawImage(
-                    img,
-                    body.getPosition().x * platform.screen.x / platform.pref.columns,
-                    body.getPosition().y * platform.screen.y / platform.pref.rows,
-                    platform.screen.x / platform.pref.columns,
-                    platform.screen.y / platform.pref.rows
-                );
-            }
+            drawMap();
         } else if (state == 'GAME_COMPLETED') {
+            drawMap();
+
             var img = document.getElementById('youWon');
             ctx.drawImage(
                 img,
@@ -117,17 +125,27 @@ function Game() {
             state = 'MENU_RESTART';
         } else if (state == 'BINGO_CRASHED') {
         } else if (state == 'MENU_RESTART') {
+            state = 'GAME_PLAYING';
         }
     }
 
-    function update() {
+    var gameLost = false;
+
+    function update(game) {
         for (var i = 0; i < board.length; i++) {
-            board[i].update();
+            board[i].update(game);
+        }
+
+        if (platform.pref.columns * platform.pref.rows - rocks.length == bingo.getTrailLength() + 1) {
+            state = 'GAME_COMPLETED';
         }
 
         for (var i = 0; i < board.length; i++) {
             if (bingo.collide(board[i])) {
                 bingo.reset();
+                board = board.filter(function(body) {
+                    return body.name !== 'WalkedGround';
+                });
             }
         }
     }
@@ -142,7 +160,8 @@ function Game() {
         bingo: bingo,
         init: init,
         draw: draw,
-        update: update
+        update: update,
+        addBody: addBody
     }
 
 }
@@ -181,6 +200,7 @@ function Body(name, x, y, image) {
     }
 
     return {
+        name: name,
         size: size,
         image: image,
         collider: collider,
@@ -199,64 +219,74 @@ function Rock(x, y) {
     return parent;
 }
 
+function WalkedGround(x, y) {
+    var parent = new Body('WalkedGround', x, y, 'ground-2');
+
+    parent.collider = true;
+
+    return parent;
+}
+
 function Bingo(x, y) {
 
     var parent = new Body('Bingo', x, y, 'bingo');
+    var previousKey = null;
+    var trailLength = 0;
 
     parent.collider = true;
     parent.update = update;
     parent.reset = reset;
+    parent.getTrailLength = getTrailLength;
 
-    var isOnCooldown = false;
-    var actionStartTimestamp = null;
-
-    function update() {
-        if (isOnCooldown && +new Date() - actionStartTimestamp > 120) {
-            isOnCooldown = false;
-            actionStartTimestamp = null;
-        }
-
-        if (isOnCooldown) { return; }
-
-        if (keyboard.isKeyDown(keyboard.controller.UP)) {
+    function update(game) {
+        if (keyboard.isKeyDown(keyboard.controller.UP) && previousKey != keyboard.keydown[keyboard.controller.UP]) {
             if (parent.getPosition().y - 1 < 0) {
                 return;
             }
+            previousKey = keyboard.keydown[keyboard.controller.UP];
+            game.addBody(new WalkedGround(parent.getPosition().x, parent.getPosition().y));
+            trailLength++;
             parent.setPosition(parent.getPosition().x, parent.getPosition().y - 1);
-            isOnCooldown = true;
-            actionStartTimestamp = +new Date();
         }
 
-        if (keyboard.isKeyDown(keyboard.controller.RIGHT)) {
+        if (keyboard.isKeyDown(keyboard.controller.RIGHT) && previousKey != keyboard.keydown[keyboard.controller.RIGHT]) {
             if (parent.getPosition().x + 1 >= platform.pref.columns) {
                 return;
             }
+            previousKey = keyboard.keydown[keyboard.controller.RIGHT];
+            game.addBody(new WalkedGround(parent.getPosition().x, parent.getPosition().y));
+            trailLength++;
             parent.setPosition(parent.getPosition().x + 1, parent.getPosition().y);
-            isOnCooldown = true;
-            actionStartTimestamp = +new Date();
         }
 
-        if (keyboard.isKeyDown(keyboard.controller.DOWN)) {
+        if (keyboard.isKeyDown(keyboard.controller.DOWN) && previousKey != keyboard.keydown[keyboard.controller.DOWN]) {
             if (parent.getPosition().y + 1 >= platform.pref.rows) {
                 return;
             }
+            previousKey = keyboard.keydown[keyboard.controller.DOWN];
+            game.addBody(new WalkedGround(parent.getPosition().x, parent.getPosition().y));
+            trailLength++;
             parent.setPosition(parent.getPosition().x, parent.getPosition().y + 1);
-            isOnCooldown = true;
-            actionStartTimestamp = +new Date();
         }
 
-        if (keyboard.isKeyDown(keyboard.controller.LEFT)) {
+        if (keyboard.isKeyDown(keyboard.controller.LEFT) && previousKey != keyboard.keydown[keyboard.controller.LEFT]) {
             if (parent.getPosition().x - 1 < 0) {
                 return;
             }
+            previousKey = keyboard.keydown[keyboard.controller.LEFT];
+            game.addBody(new WalkedGround(parent.getPosition().x, parent.getPosition().y));
+            trailLength++;
             parent.setPosition(parent.getPosition().x - 1, parent.getPosition().y);
-            isOnCooldown = true;
-            actionStartTimestamp = +new Date();
         }
     }
 
     function reset() {
         parent.setPosition(0, 0);
+        trailLength = 0;
+    }
+
+    function getTrailLength() {
+        return trailLength;
     }
 
     return parent;
@@ -275,7 +305,7 @@ function Bingo(x, y) {
     function tick() {
         requestAnimationFrame(tick);
 
-        game.update();
+        game.update(game);
         game.draw();
     }
 
