@@ -21,6 +21,7 @@ var platform = new Platform();
 
 function Keyboard() {
     var keydown = {};
+    var lastKeydown = null;
 
     var controller = {
         UP: 38,
@@ -31,7 +32,13 @@ function Keyboard() {
     }
 
     function doKeydown(e) {
+        // Throttle 'keydown' registration to a maximum of one every 10 milliseconds
+        if (lastKeydown && +new Date() - lastKeydown < 10) {
+            return;
+        }
+
         if ( ! keydown[e.keyCode]) {
+            lastKeydown = +new Date();
             keydown[e.keyCode] = +new Date();
         }
     }
