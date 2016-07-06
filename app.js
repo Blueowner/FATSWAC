@@ -230,7 +230,7 @@ function WalkedGround(x, y) {
 function Bingo(x, y) {
 
     var parent = new Body('Bingo', x, y, 'bingo');
-    var previousKey = null;
+    var previousKeydown = {};
     var trailLength = 0;
 
     parent.collider = true;
@@ -239,41 +239,41 @@ function Bingo(x, y) {
     parent.getTrailLength = getTrailLength;
 
     function update(game) {
-        if (keyboard.isKeyDown(keyboard.controller.UP) && previousKey != keyboard.keydown[keyboard.controller.UP]) {
+        if (keyboard.isKeyDown(keyboard.controller.UP) && previousKeydown[keyboard.controller.UP] != keyboard.keydown[keyboard.controller.UP]) {
             if (parent.getPosition().y - 1 < 0) {
                 return;
             }
-            previousKey = keyboard.keydown[keyboard.controller.UP];
+            previousKeydown[keyboard.controller.UP] = keyboard.keydown[keyboard.controller.UP];
             game.addBody(new WalkedGround(parent.getPosition().x, parent.getPosition().y));
             trailLength++;
             parent.setPosition(parent.getPosition().x, parent.getPosition().y - 1);
         }
 
-        if (keyboard.isKeyDown(keyboard.controller.RIGHT) && previousKey != keyboard.keydown[keyboard.controller.RIGHT]) {
+        if (keyboard.isKeyDown(keyboard.controller.RIGHT) && previousKeydown[keyboard.controller.RIGHT] != keyboard.keydown[keyboard.controller.RIGHT]) {
             if (parent.getPosition().x + 1 >= platform.pref.columns) {
                 return;
             }
-            previousKey = keyboard.keydown[keyboard.controller.RIGHT];
+            previousKeydown[keyboard.controller.RIGHT] = keyboard.keydown[keyboard.controller.RIGHT];
             game.addBody(new WalkedGround(parent.getPosition().x, parent.getPosition().y));
             trailLength++;
             parent.setPosition(parent.getPosition().x + 1, parent.getPosition().y);
         }
 
-        if (keyboard.isKeyDown(keyboard.controller.DOWN) && previousKey != keyboard.keydown[keyboard.controller.DOWN]) {
+        if (keyboard.isKeyDown(keyboard.controller.DOWN) && previousKeydown[keyboard.controller.DOWN] != keyboard.keydown[keyboard.controller.DOWN]) {
             if (parent.getPosition().y + 1 >= platform.pref.rows) {
                 return;
             }
-            previousKey = keyboard.keydown[keyboard.controller.DOWN];
+            previousKeydown[keyboard.controller.DOWN] = keyboard.keydown[keyboard.controller.DOWN];
             game.addBody(new WalkedGround(parent.getPosition().x, parent.getPosition().y));
             trailLength++;
             parent.setPosition(parent.getPosition().x, parent.getPosition().y + 1);
         }
 
-        if (keyboard.isKeyDown(keyboard.controller.LEFT) && previousKey != keyboard.keydown[keyboard.controller.LEFT]) {
+        if (keyboard.isKeyDown(keyboard.controller.LEFT) && previousKeydown[keyboard.controller.LEFT] != keyboard.keydown[keyboard.controller.LEFT]) {
             if (parent.getPosition().x - 1 < 0) {
                 return;
             }
-            previousKey = keyboard.keydown[keyboard.controller.LEFT];
+            previousKeydown[keyboard.controller.LEFT] = keyboard.keydown[keyboard.controller.LEFT];
             game.addBody(new WalkedGround(parent.getPosition().x, parent.getPosition().y));
             trailLength++;
             parent.setPosition(parent.getPosition().x - 1, parent.getPosition().y);
